@@ -6,28 +6,29 @@ Utilities for Amazon Elastic File System (EFS)
 
 The `efs-utils` package has been verified against the following Linux distributions:
 
-| Distribution | Package Type | `init` System |
-| ------------ | ------------ | ------------- |
+| Distribution         | Package Type | `init` System |
+|----------------------| ----- | --------- |
 | Amazon Linux 2017.09 | `rpm` | `upstart` |
-| Amazon Linux 2 | `rpm` | `systemd` |
-| CentOS 7 | `rpm` | `systemd` |
-| CentOS 8 | `rpm` | `systemd` |
-| RHEL 7 | `rpm`| `systemd` |
-| RHEL 8 | `rpm`| `systemd` |
-| Fedora 28 | `rpm` | `systemd` |
-| Fedora 29 | `rpm` | `systemd` |
-| Fedora 30 | `rpm` | `systemd` |
-| Fedora 31 | `rpm` | `systemd` |
-| Fedora 32 | `rpm` | `systemd` |
-| Debian 9 | `deb` | `systemd` |
-| Debian 10 | `deb` | `systemd` |
-| Ubuntu 16.04 | `deb` | `systemd` |
-| Ubuntu 18.04 | `deb` | `systemd` |
-| Ubuntu 20.04 | `deb` | `systemd` |
-| OpenSUSE Leap | `rpm` | `systemd` |
-| OpenSUSE Tumbleweed | `rpm` | `systemd` |
-| SLES 12 | `rpm` | `systemd` |
-| SLES 15 | `rpm` | `systemd` |
+| Amazon Linux 2       | `rpm` | `systemd` |
+| CentOS 7             | `rpm` | `systemd` |
+| CentOS 8             | `rpm` | `systemd` |
+| RHEL 7               | `rpm`| `systemd` |
+| RHEL 8               | `rpm`| `systemd` |
+| Fedora 28            | `rpm` | `systemd` |
+| Fedora 29            | `rpm` | `systemd` |
+| Fedora 30            | `rpm` | `systemd` |
+| Fedora 31            | `rpm` | `systemd` |
+| Fedora 32            | `rpm` | `systemd` |
+| Debian 9             | `deb` | `systemd` |
+| Debian 10            | `deb` | `systemd` |
+| Ubuntu 16.04         | `deb` | `systemd` |
+| Ubuntu 18.04         | `deb` | `systemd` |
+| Ubuntu 20.04         | `deb` | `systemd` |
+| OpenSUSE Leap        | `rpm` | `systemd` |
+| OpenSUSE Tumbleweed  | `rpm` | `systemd` |
+| Oracle8              | `rpm` | `systemd` |
+| SLES 12              | `rpm` | `systemd` |
+| SLES 15              | `rpm` | `systemd` |
 
 The `efs-utils` package has been verified against the following MacOS distributions:
 
@@ -35,6 +36,44 @@ The `efs-utils` package has been verified against the following MacOS distributi
 | -------------- | ------------- |
 | MacOS Big Sur  | `launchd` |
 | MacOS Monterey | `launchd` |
+| MacOS Ventura  | `launchd` |
+
+## README contents
+  - [Prerequisites](#prerequisites)
+  - [Optional](#optional)
+  - [Installation](#installation)
+    - [On Amazon Linux distributions](#on-amazon-linux-distributions)
+    - [Install via AWS Systems Manager Distributor](#install-via-aws-systems-manager-distributor)
+    - [On other Linux distributions](#on-other-linux-distributions)
+    - [On MacOS Big Sur, macOS Monterey and macOS Ventura distribution](#on-macos-big-sur-macos-monterey-and-macos-ventura-distribution)
+      - [Run tests](#run-tests)
+  - [Usage](#usage)
+    - [mount.efs](#mountefs)
+    - [MacOS](#macos)
+    - [amazon-efs-mount-watchdog](#amazon-efs-mount-watchdog)
+  - [Troubleshooting](#troubleshooting)
+  - [Upgrading stunnel for RHEL/CentOS](#upgrading-stunnel-for-rhelcentos)
+  - [Upgrading stunnel for SLES12](#upgrading-stunnel-for-sles12)
+  - [Upgrading stunnel for MacOS](#upgrading-stunnel-for-macos)
+  - [Install botocore](#install-botocore)
+      - [RPM](#rpm)
+      - [DEB](#deb)
+      - [On Debian10 and Ubuntu20, the botocore needs to be installed in specific target folder](#on-debian10-and-ubuntu20-the-botocore-needs-to-be-installed-in-specific-target-folder)
+      - [To install botocore on MacOS](#to-install-botocore-on-macos)
+  - [Upgrade botocore](#upgrade-botocore)
+  - [Enable mount success/failure notification via CloudWatch log](#enable-mount-successfailure-notification-via-cloudwatch-log)
+    - [Step 1. Install botocore](#step-1-install-botocore)
+    - [Step 2. Enable CloudWatch log feature in efs-utils config file `/etc/amazon/efs/efs-utils.conf`](#step-2-enable-cloudwatch-log-feature-in-efs-utils-config-file-etcamazonefsefs-utilsconf)
+    - [Step 3. Attach the CloudWatch logs policy to the IAM role attached to instance.](#step-3-attach-the-cloudwatch-logs-policy-to-the-iam-role-attached-to-instance)
+  - [Optimize readahead max window size on Linux 5.4+](#optimize-readahead-max-window-size-on-linux-54)
+  - [Using botocore to retrieve mount target ip address when dns name cannot be resolved](#using-botocore-to-retrieve-mount-target-ip-address-when-dns-name-cannot-be-resolved)
+    - [Step 1. Install botocore](#step-1-install-botocore-1)
+    - [Step 2. Allow DescribeMountTargets and DescribeAvailabilityZones action in the IAM policy](#step-2-allow-describemounttargets-and-describeavailabilityzones-action-in-the-iam-policy)
+  - [The way to access instance metadata](#the-way-to-access-instance-metadata)
+  - [Use the assumed profile credentials for IAM](#use-the-assumed-profile-credentials-for-iam)
+  - [Enabling FIPS Mode](#enabling-fips-mode)
+  - [License Summary](#license-summary)
+
 
 ## Prerequisites
 
@@ -53,7 +92,7 @@ The `efs-utils` package has been verified against the following MacOS distributi
 
 For those using Amazon Linux or Amazon Linux 2, the easiest way to install `efs-utils` is from Amazon's repositories:
 
-```
+```bash
 $ sudo yum -y install amazon-efs-utils
 ```
 
@@ -78,7 +117,7 @@ Other distributions require building the package from source and installing it.
 
 If the distribution is not OpenSUSE or SLES
 
-```
+```bash
 $ sudo yum -y install git rpm-build make
 $ git clone https://github.com/aws/efs-utils
 $ cd efs-utils
@@ -88,7 +127,7 @@ $ sudo yum -y install build/amazon-efs-utils*rpm
 
 Otherwise
 
-```
+```bash
 $ sudo zypper refresh
 $ sudo zypper install -y git rpm-build make
 $ git clone https://github.com/aws/efs-utils
@@ -100,7 +139,7 @@ $ sudo zypper --no-gpg-checks install -y build/amazon-efs-utils*rpm
 On OpenSUSE, if you see error like `File './suse/noarch/bash-completion-2.11-2.1.noarch.rpm' not found on medium 'http://download.opensuse.org/tumbleweed/repo/oss/'`
 during installation of `git`, run the following commands to re-add repo OSS and NON-OSS, then run the install script above again.
 
-```
+```bash
 sudo zypper ar -f -n OSS http://download.opensuse.org/tumbleweed/repo/oss/ OSS
 sudo zypper ar -f -n NON-OSS http://download.opensuse.org/tumbleweed/repo/non-oss/ NON-OSS
 sudo zypper refresh
@@ -108,7 +147,7 @@ sudo zypper refresh
 
 - To build and install a Debian package:
 
-```
+```bash
 $ sudo apt-get update
 $ sudo apt-get -y install git binutils
 $ git clone https://github.com/aws/efs-utils
@@ -117,38 +156,27 @@ $ ./build-deb.sh
 $ sudo apt-get -y install ./build/amazon-efs-utils*deb
 ```
 
-### On MacOS Big Sur and macOS Monterey distribution
+### On MacOS Big Sur, macOS Monterey and macOS Ventura distribution
 
-For EC2 Mac instances running macOS Big Sur and macOS Monterey, you can install amazon-efs-utils from the 
+For EC2 Mac instances running macOS Big Sur, macOS Monterey and macOS Ventura, you can install amazon-efs-utils from the 
 [homebrew-aws](https://github.com/aws/homebrew-aws) respository. **Note that this will ONLY work on EC2 instances
-running macOS Big Sur and macOS Monterey, not local Mac computers.**
-```
+running macOS Big Sur, macOS Monterey and macOS Ventura, not local Mac computers.**
+```bash
 brew install amazon-efs-utils
 ```
 
-This will install amazon-efs-utils on your EC2 Mac Instance running macOS Big Sur and macOS Monterey in the directory `/usr/local/Cellar/amazon-efs-utils`. At the end of the installation, it will print a set of commands that must be executed in order to start using efs-utils. The instructions that are printed after amazon-efs-utils and must be executed are:
-
-```
-Perform below actions to start using efs:
-    sudo mkdir -p /Library/Filesystems/efs.fs/Contents/Resources
-    sudo ln -s /usr/local/bin/mount.efs /Library/Filesystems/efs.fs/Contents/Resources/mount_efs
-
-Perform below actions to stop using efs:
-    sudo rm /Library/Filesystems/efs.fs/Contents/Resources/mount_efs
-
-To enable watchdog for using TLS mounts:
-    sudo cp /usr/local/Cellar/amazon-efs-utils/<version>/libexec/amazon-efs-mount-watchdog.plist /Library/LaunchAgents
-    sudo launchctl load /Library/LaunchAgents/amazon-efs-mount-watchdog.plist
-
-To disable watchdog for using TLS mounts:
-    sudo launchctl unload /Library/LaunchAgents/amazon-efs-mount-watchdog.plist
+This will install amazon-efs-utils on your EC2 Mac Instance running macOS Big Sur, macOS Monterey and macOS Ventura in the directory `/usr/local/Cellar/amazon-efs-utils`. 
+  		  
+***Follow the instructions in caveats when using efs-utils on EC2 Mac instance for the first time.*** To check the package caveats run below command
+```bash
+brew info amazon-efs-utils
 ```
 
 #### Run tests
 
 - [Set up a virtualenv](http://libzx.so/main/learning/2016/03/13/best-practice-for-virtualenv-and-git-repos.html) for efs-utils
 
-```
+```bash
 $ virtualenv ~/.envs/efs-utils
 $ source ~/.envs/efs-utils/bin/activate
 $ pip install -r requirements.txt
@@ -156,7 +184,7 @@ $ pip install -r requirements.txt
 
 - Run tests
 
-```
+```bash
 $ make test
 ```
 
@@ -168,56 +196,56 @@ $ make test
 
 To mount with the recommended default options, simply run:
 
-```
+```bash
 $ sudo mount -t efs file-system-id efs-mount-point/
 ```
 
 To mount file system to a specific mount target of the file system, run:
 
-```
+```bash
 $ sudo mount -t efs -o mounttargetip=mount-target-ip-address file-system-id efs-mount-point/
 ```
 
 To mount file system within a given network namespace, run:
 
-```
+```bash
 $ sudo mount -t efs -o netns=netns-path file-system-id efs-mount-point/
 ```
 
 To mount file system to the mount target in specific availability zone (e.g. us-east-1a), run:
 
-```
+```bash
 $ sudo mount -t efs -o az=az-name file-system-id efs-mount-point/
 ```
 
 To mount over TLS, simply add the `tls` option:
 
-```
+```bash
 $ sudo mount -t efs -o tls file-system-id efs-mount-point/
 ```
 
 To authenticate with EFS using the system’s IAM identity, add the `iam` option. This option requires the `tls` option.
 
-```
+```bash
 $ sudo mount -t efs -o tls,iam file-system-id efs-mount-point/
 ```
 
 To mount using an access point, use the `accesspoint=` option. This option requires the `tls` option.
 The access point must be in the "available" state before it can be used to mount EFS.
 
-```
+```bash
 $ sudo mount -t efs -o tls,accesspoint=access-point-id file-system-id efs-mount-point/
 ```
 
 To mount your file system automatically with any of the options above, you can add entries to `/efs/fstab` like:
 
-```
+```bash
 file-system-id efs-mount-point efs _netdev,tls,iam,accesspoint=access-point-id 0 0
 ```
 
 For more information on mounting with the mount helper, see the manual page:
 
-```
+```bash
 man mount.efs
 ```
 
@@ -227,17 +255,17 @@ or refer to the [documentation](https://docs.aws.amazon.com/efs/latest/ug/using-
 
 For EC2 instances using Mac distribution, the recommended default options will perform a tls mount:
 
-```
+```bash
 $ sudo mount -t efs file-system-id efs-mount-point/
 ```
  or
-```
+```bash
 $ sudo mount -t efs -o tls file-system-id efs-mount-point/
 ```
 
 To mount without TLS, simply add the `notls` option:
 
-```
+```bash
 $ sudo mount -t efs -o notls file-system-id efs-mount-point/
 ```
 
@@ -245,6 +273,18 @@ $ sudo mount -t efs -o notls file-system-id efs-mount-point/
 ### amazon-efs-mount-watchdog
 
 `efs-utils` contains a watchdog process to monitor the health of TLS mounts. This process is managed by either `upstart` or `systemd` depending on your Linux distribution and `launchd` on Mac distribution, and is started automatically the first time an EFS file system is mounted over TLS.
+
+## Troubleshooting
+If you run into a problem with efs-utils, please open an issue in this repository.  We can more easily
+assist you if relevant logs are provided.  You can find the log file at `/var/log/amazon/efs/mount.log`.  
+
+Often times, enabling debug level logging can help us find problems more easily.  To do this, run  
+`sed -i '/logging_level = INFO/s//logging_level = DEBUG/g' /etc/amazon/efs/efs-utils.conf`.  
+
+You can also enable stunnel debug logs with  
+`sed -i '/stunnel_debug_enabled = false/s//stunnel_debug_enabled = true/g' /etc/amazon/efs/efs-utils.conf`.   
+
+Make sure to perform the failed mount again after running the prior commands before pulling the logs.
 
 ## Upgrading stunnel for RHEL/CentOS
 
@@ -265,7 +305,7 @@ sudo zypper install -y stunnel
 ## Upgrading stunnel for MacOS
 
 The installation installs latest stunnel available in brew repository. You can also upgrade the version of stunnel on your instance using the command below:
-```
+```bash
 brew upgrade stunnel
 ```
 
@@ -282,11 +322,11 @@ sudo yum -y install wget
 ```
 ```bash
 if [[ "$(python3 -V 2>&1)" =~ ^(Python 3.6.*) ]]; then
-    sudo wget https://bootstrap.pypa.io/3.6/get-pip.py -O /tmp/get-pip.py
+    sudo wget https://bootstrap.pypa.io/pip/3.6/get-pip.py -O /tmp/get-pip.py
 elif [[ "$(python3 -V 2>&1)" =~ ^(Python 3.5.*) ]]; then
-    sudo wget https://bootstrap.pypa.io/3.5/get-pip.py -O /tmp/get-pip.py
+    sudo wget https://bootstrap.pypa.io/pip/3.5/get-pip.py -O /tmp/get-pip.py
 elif [[ "$(python3 -V 2>&1)" =~ ^(Python 3.4.*) ]]; then
-    sudo wget https://bootstrap.pypa.io/3.4/get-pip.py -O /tmp/get-pip.py
+    sudo wget https://bootstrap.pypa.io/pip/3.4/get-pip.py -O /tmp/get-pip.py
 else
     sudo wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py
 fi
@@ -298,11 +338,11 @@ sudo apt-get -y install wget
 ```
 ```bash
 if echo $(python3 -V 2>&1) | grep -e "Python 3.6"; then
-    sudo wget https://bootstrap.pypa.io/3.6/get-pip.py -O /tmp/get-pip.py
+    sudo wget https://bootstrap.pypa.io/pip/3.6/get-pip.py -O /tmp/get-pip.py
 elif echo $(python3 -V 2>&1) | grep -e "Python 3.5"; then
-    sudo wget https://bootstrap.pypa.io/3.5/get-pip.py -O /tmp/get-pip.py
+    sudo wget https://bootstrap.pypa.io/pip/3.5/get-pip.py -O /tmp/get-pip.py
 elif echo $(python3 -V 2>&1) | grep -e "Python 3.4"; then
-    sudo wget https://bootstrap.pypa.io/3.4/get-pip.py -O /tmp/get-pip.py
+    sudo wget https://bootstrap.pypa.io/pip/3.4/get-pip.py -O /tmp/get-pip.py
 else
     sudo apt-get -y install python3-distutils
     sudo wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py
@@ -353,7 +393,13 @@ sudo sed -i -e '/\[cloudwatch-log\]/{N;s/# enabled = true/enabled = true/}' /etc
 
 - For MacOS:
 ```bash
-sudo sed -i -e '/\[cloudwatch-log\]/{N;s/# enabled = true/enabled = true/;}' /usr/local/Cellar/amazon-efs-utils/<version>/libexec/etc/amazon/efs/efs-utils.conf
+    EFS_UTILS_VERSION=<e.g. 1.34.5>
+    sudo sed -i -e '/\[cloudwatch-log\]/{N;s/# enabled = true/enabled = true/;}' /usr/local/Cellar/amazon-efs-utils/${EFS_UTILS_VERSION}/libexec/etc/amazon/efs/efs-utils.conf
+```
+- For Mac2 instance:
+```bash
+    EFS_UTILS_VERSION=<e.g. 1.34.5>
+    sudo sed -i -e '/\[cloudwatch-log\]/{N;s/# enabled = true/enabled = true/;}' /opt/homebrew/Cellar/amazon-efs-utils/${EFS_UTILS_VERSION}/libexec/etc/amazon/efs/efs-utils.conf
 ```
 You can also configure CloudWatch log group name and log retention days in the config file.
 If you want to have separate log groups in Cloudwatch for every mounted file system, add `/{fs_id}` to the end of the `log_group_name` field in `efs-utils.conf` file. For example, the `log_group_name` in `efs-utils.conf` file would look something like:
@@ -362,7 +408,6 @@ If you want to have separate log groups in Cloudwatch for every mounted file sys
 [cloudwatch-log]
 log_group_name = /aws/efs/utils/{fs_id}
 ```
-
 ### Step 3. Attach the CloudWatch logs policy to the IAM role attached to instance.
 Attach AWS managed policy `AmazonElasticFileSystemsUtils` to the iam role you attached to the instance, or the aws credentials
 configured on your instance.
@@ -433,7 +478,7 @@ sed -i "s/disable_fetch_ec2_metadata_token = false/disable_fetch_ec2_metadata_to
 To authenticate with EFS using the system’s IAM identity of an awsprofile, add the `iam` option and pass the profile name to 
 `awsprofile` option. These options require the `tls` option.
 
-```
+```bash
 $ sudo mount -t efs -o tls,iam,awsprofile=test-profile file-system-id efs-mount-point/
 ```
 
@@ -478,6 +523,40 @@ role_arn = <role-arn-in-account-A>
 credential_source = Ec2InstanceMetadata
 ```
 
+## Use AssumeRoleWithWebIdentity
+
+You can use [web identity to assume a role](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRoleWithWebIdentity.html) which has the permission to attach to the EFS filesystem. You need to have a valid JWT token and a role arn to assume. There are two ways you can leverage them:
+
+1) By setting environment variable the path to the file containing the JWT token in `AWS_WEB_IDENTITY_TOKEN_FILE` and by setting `ROLE_ARN` environment variable. The command below shows an example of to leverage it.
+
+```bash
+$ sudo mount -t efs -o tls,iam file-system-id efs-mount-point/
+```
+
+2) By passing the JWT token file path and the role arn as parameters to the mount command. The command below shows an example of to leverage it.
+
+```bash
+$ sudo mount -t efs -o tls,iam,rolearn="ROLE_ARN",jwtpath="PATH/JWT_TOKEN_FILE" file-system-id efs-mount-point/
+```
+
+## Enabling FIPS Mode
+Efs-Utils is able to enter FIPS mode when mounting your file system. To enable FIPS you need to modify the EFS-Utils config file:
+```bash
+sed -i "s/fips_mode_enabled = false/fips_mode_enabled = true/" /etc/amazon/efs/efs-utils.conf
+```
+This will enable any potential API call from EFS-Utils to use FIPS endpoints and cause stunnel to enter FIPS mode 
+
+Note: FIPS mode requires that the installed version of OpenSSL is compiled with FIPS.
+
+To verify that the installed version is compiled with FIPS, look for `OpenSSL X.X.Xx-fips` in the `stunnel -version` command output e.g.
+```bash
+$ stunnel -version
+stunnel 4.56 on x86_64-koji-linux-gnu platform
+Compiled/running with OpenSSL 1.0.2k-fips  26 Jan 2017
+Threading:PTHREAD Sockets:POLL,IPv6 SSL:ENGINE,OCSP,FIPS Auth:LIBWRAP
+```
+
+For more information on how to configure OpenSSL with FIPS see the [OpenSSL FIPS README](https://github.com/openssl/openssl/blob/master/README-FIPS.md).
 
 ## License Summary
 
